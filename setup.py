@@ -26,8 +26,8 @@ setup(
     entry_points={
         'console_scripts': [
          	'follower = ros2_term_project.line_follower:main',
-         	'follower1 = ros2_term_project.line_follower1:main',
-      		'box_spawn = ros2_term_project.box_spawn:main',
+         	'follower2 = ros2_term_project.line_follower2:main',
+		'move = ros2_term_project.box_move:main',
         ],
     },
 )

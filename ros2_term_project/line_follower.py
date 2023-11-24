@@ -22,7 +22,7 @@ class LineFollower(Node):
         self.bridge = cv_bridge.CvBridge()
         self._subscription = self.create_subscription(Image, '/camera2/image_raw', self.image_callback, 10)
         self._subscription2 = self.create_subscription(Image, '/camera1/image_raw',self.stop_line_callback, 10)
-        self._subscription = self.create_subscription(LaserScan, '/scan', self.moving_callback, 10)     
+        self._subscription3 = self.create_subscription(LaserScan, '/scan', self.scan_callback, 10)     
         self._publisher = self.create_publisher(Twist, 'cmd_vel', 1)
         self.twist = Twist()
         self.twist.linear.x = 3.1
@@ -31,7 +31,7 @@ class LineFollower(Node):
         self.count = 0
         self.start_time = time.time()  # 시작 시간 저장
         self.timer = None  # 타이머 변수 추가
-        self.set_timer(39, self.first_decrease_speed)
+        self.set_timer(35, self.first_decrease_speed)
         self.sensorFlag = False
         self.obstacle_found = False
         self.waiting_start_time = None
@@ -51,7 +51,7 @@ class LineFollower(Node):
             self.obstacle_found = False
     def go(self):
         self.get_logger().info('obstacle has been removed...')
-        self.twist.linear.x = 3.0
+        self.twist.linear.x = 3.4
         
     def moving_callback(self, msg: LaserScan):
         self.twist.linear.x = 3.0
@@ -59,8 +59,7 @@ class LineFollower(Node):
                                          
     def stop_line_callback(self, msg: Image):
         img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-        self.stop_line_tracker.stop_line_callback(img)        
-        self.line_tracker.process(img)                            
+        self.stop_line_tracker.stop_line_callback(img)                                
         if self.stop_line_tracker.stop_line_mask is not None and np.any(self.stop_line_tracker.stop_line_mask >= 230):
 
             if self.sensorFlag == False:
@@ -73,7 +72,7 @@ class LineFollower(Node):
             if self.count == 1:
                 self.stop()
                 time.sleep(3)
-                self.twist.linear.x = 2.73
+                self.twist.linear.x = 2.6
                 self.get_logger().info('linear.x = %f' % self.twist.linear.x) 
                 self.get_logger().info('count = %f' % self.count)                           
                 self._publisher.publish(self.twist)
@@ -82,18 +81,18 @@ class LineFollower(Node):
                                
             if self.count == 2:
                 self.stop()  
-                time.sleep(4)  
+                time.sleep(3)  
                 self.twist.linear.x = 3.2
                 self.get_logger().info('linear.x = %f' % self.twist.linear.x) 
                 self.get_logger().info('count = %f' % self.count)                           
                 self._publisher.publish(self.twist) 
-                self.set_timer(14, self.second_decrease_speed)  
+                self.set_timer(16, self.second_decrease_speed)  
                    
                                                         
             if self.count == 3:
                 self.get_logger().info('count = %f' % self.count)            
                 self.stop()
-                self.sleep(10000)
+                time.sleep(100)
 
         else:
             self.sensorFlag = False
@@ -101,22 +100,22 @@ class LineFollower(Node):
     def image_callback(self, msg: Image):
         img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         self.line_tracker.process(img)
-        self.twist.angular.z = (-1) * self.line_tracker._delta / 200
+        self.twist.angular.z = (-1) * self.line_tracker._delta / 250
         self._publisher.publish(self.twist)
 
         
     def increase_speed(self):
-        self.twist.linear.x = 3.6
+        self.twist.linear.x = 3.4
         self.get_logger().info('linear.x = %f' % self.twist.linear.x) 
         self._publisher.publish(self.twist)
         
     def first_decrease_speed(self):
-        self.twist.linear.x = 2.55
+        self.twist.linear.x = 2.2
         self.get_logger().info('linear.x = %f' % self.twist.linear.x) 
         self._publisher.publish(self.twist)  
                   
     def second_decrease_speed(self):
-        self.twist.linear.x = 2.6
+        self.twist.linear.x = 2.2
         self.get_logger().info('linear.x = %f' % self.twist.linear.x) 
         self._publisher.publish(self.twist)
         

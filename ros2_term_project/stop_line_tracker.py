@@ -19,7 +19,7 @@ class StopLineTracker(Node):
         self.start_time = time.time()  # 시작 시간 저장
         self.timer = None  # 타이머 변수 추가
         self.stop_line_mask = None  # 인스턴스 변수로 선언
-                
+               
     def stop_line_callback(self, img: np.ndarray) -> None:
         if time.time() - self.start_time < 10:  # 타임 시간 동안은 기능을 사용하지 않음
             return                    
@@ -31,8 +31,13 @@ class StopLineTracker(Node):
         h, w, d = img.shape
         search_top = int( h / 2 - 50 )
         search_bot = int(h)
-        self.stop_line_mask[0:search_top, 0:w] = 0
-        self.stop_line_mask[search_bot:h, 0:w] = 0
+        self.stop_line_mask[0:h,0:int(w / 2 -45)] = 0
+        self.stop_line_mask[0:h,int(w / 2 - 35 ):int(w)] = 0
+        self.stop_line_mask[0:int(h / 2 - 5),0:w] = 0
+        self.stop_line_mask[int(h / 2 + 5):int(h),0:w] = 0 
+        
+        #self.stop_line_mask[0:search_top, 0:w] = 0
+       # self.stop_line_mask[search_bot:h, 0:w] = 0
         
         M = cv2.moments(self.stop_line_mask)
         if M['m00'] > 0:

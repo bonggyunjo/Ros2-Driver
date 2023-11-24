@@ -616,7 +616,7 @@
                 <mass>0.035</mass>
             </inertial>
 
-            <pose>4.6 0.7 0.1 0 0.9 0</pose>
+            <pose>2.0 0.7 1.2 0 0.53 0</pose>
             <!--sensor name = "" should change when you use camera more then one-->
             <sensor name="camera1" type="camera">
                 <always_on>true</always_on>
@@ -699,7 +699,7 @@
                 <mass>0.035</mass>
             </inertial>
 
-            <pose>2 0.7 0.65 0 0.43 1.3</pose>
+            <pose>2 0.7 0.8 0 0.5 1.57</pose>
             <!--sensor name = "" should change when you use camera more then one-->
             <sensor name="camera2" type="camera">
                 <always_on>true</always_on>
@@ -804,82 +804,75 @@
         <robot_base_frame>chassis</robot_base_frame>
 
       </plugin>
-        <link name="hokuyo_link">
-            <pose>2.2 0.5 0.8 0 0 0</pose>
+<link name="hokuyo_link">
+            <pose>2.1 0 0.8 0 0 0</pose>
             <inertial>
-                <inertia>
-                    <ixx>1e-6</ixx>
-                    <ixy>0</ixy>
-                    <ixz>0</ixz>
-                    <iyy>1e-6</iyy>
-                    <iyz>0</iyz>
-                    <izz>1e-6</izz>
-                </inertia>
-                
-                    <mass>1e-5</mass>
-                </inertial>
-                <collision name="collision">
-                    <pose>0 0 0.5 0 0 0</pose>
-                    <geometry>
-                        <box>
-                            <size>0.1 0.1 0.1</size>
-                        </box>
-                    </geometry>
-                </collision>
-                <visual name="visual">
-                    <geometry>
-                    	<mesh>
-                    	    <uri>model://hokuyo/meshes/hokuyo.dae</uri>
-                        </mesh>
-                    </geometry>
-                </visual>
-
-                <sensor name="laser" type="ray">
-                    <pose>0.01 0 0.0175 0 -0 0</pose>
-                    <ray>
-                        <scan>
-                            <horizontal>
-                                <samples>320</samples>
-                                <resolution>5</resolution>  <!-- default: 1 -->
-                                <min_angle>-1.00</min_angle> <!-- 0.1 to 0.2, 0.13 -->
-                                <max_angle>1.00</max_angle>
-                            </horizontal>
-                        </scan>
-                        <range>
-                            <min>0.08</min>
-                            <max>8</max>
-                            <resolution>0.2</resolution>
-                        </range>
-                    </ray>
-
-                    <plugin name="laser" filename="libgazebo_ros_ray_sensor.so">
-                        <ros>
-                            <!-- <namespace>test_cam</namespace> -->
-                            <!-- <remapping>out:=scan</remapping > -->
-                            <remapping>~/out:=scan</remapping>
-                            <!-- <remapping>camera_info:=camera_info_demo</remapping> -->
-                        </ros>
-
-                        <frame_name>laser_frame</frame_name>
-                        <output_type>sensor_msgs/LaserScan</output_type>
-                    </plugin>
-                    <always_on>1</always_on>
-                    <update_rate>5</update_rate>  <!-- 10 -> 2 -->
-                    <visualize>1</visualize>
-                </sensor>
-            </link>
-
-            <joint name="hokuyo_joint" type="revolute">
-                <parent>chassis</parent>
-                <child>hokuyo_link</child>
-                <axis>
-                    <xyz>0 1 0</xyz>
-                    <limit>
-                        <upper>0</upper>
-                        <lower>0</lower>
-                    </limit>
-                </axis>
-            </joint>     
+               <inertia>
+                  <ixx>1e-6</ixx>
+                  <ixy>0</ixy>
+                  <ixz>0</ixz>
+                  <iyy>1e-6</iyy>
+            <iyz>0</iyz>
+            <izz>1e-6</izz>
+         </inertia>
+         <mass>1e-5</mass>
+      </inertial>
+      <collision name ="collision">
+         <pose>0 0 0.5 0 0 0</pose>
+         <geometry>
+            <box>
+               <size>0.1 0.1 0.1</size>
+            </box>
+         </geometry>
+      </collision>
+      <visual name="visual">
+         <geometry>
+            <mesh>
+               <uri>model://hokuyo/meshes/hokuyo.dae</uri>
+            </mesh>
+         </geometry>
+      </visual>
+      <sensor name="laser" type="ray">
+         <pose>0.01 0 0.0175 0 -0 0</pose>
+          <ray>
+                 <scan>
+                     <horizontal>
+                           <samples>320</samples>
+                          <resolution>5</resolution>
+                          <min_angle>-0.50</min_angle>
+                          <max_angle>0.50</max_angle>
+                      </horizontal>
+                   </scan>
+                 <range>
+                      <min>0.1</min>
+                      <max>8</max>
+                 </range>
+              </ray>
+         <plugin name="laser" filename="libgazebo_ros_ray_sensor.so">
+            <ros>
+               <remapping>~/out:=scan</remapping>
+            </ros>
+            
+            <frame_name>laser_Frame</frame_name>
+            <output_type>sensor_msgs/LaserScan</output_type>
+         </plugin>
+         <always_on>1</always_on>
+         <update_rate>5</update_rate>
+         <visualize>1</visualize>
+      </sensor>
+   </link>
+   <joint name="hokuyo_joint" type="revolute">
+      <parent>chassis</parent>
+      <child>hokuyo_link</child>
+      <axis>
+         <xyz>0 1 0</xyz>
+         <limit>
+            <upper>0</upper>
+            <lower>0</lower>
+         </limit>
+      </axis>
+   </joint>   
+   
     </model>
 
 <!--          
@@ -1086,7 +1079,6 @@ from now on, under lines are for other prius_hybird car!!
             <izz>0.33552910</izz>
           </inertia>
         </inertial>
-
         <visual name="visual">
           <pose>0.04 0.0 0.0 0 0 0</pose>
           <geometry>
@@ -1419,6 +1411,90 @@ from now on, under lines are for other prius_hybird car!!
           </ode>
         </physics>
       </joint>
+
+
+           <link name="camera_link3">
+       <pose>2 -0.7 0.8 0 0 0</pose>
+          <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.1 0.1 0.1</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+
+        <link name="camera_rgb_optical_frame3">
+            <inertial>
+                <pose>0 0 0 0 0 0</pose>  <!-- 0.076 0.0 0.093 0 0 0 -->
+                <inertia>
+                    <ixx>0.001</ixx>
+                    <ixy>0.000</ixy>
+                    <ixz>0.000</ixz>
+                    <iyy>0.001</iyy>
+                    <iyz>0.000</iyz>
+                    <izz>0.001</izz>
+                </inertia>
+                <mass>0.035</mass>
+            </inertial>
+
+            <pose>2.0 -0.1 1.2 0 0.51 0</pose>
+            <!--sensor name = "" should change when you use camera more then one-->
+            <sensor name="camera3" type="camera">
+                <always_on>true</always_on>
+                <visualize>true</visualize>
+                <update_rate>10</update_rate>
+                <camera name="picam">
+                    <horizontal_fov>1.085595</horizontal_fov>
+                    <image>
+                        <width>640</width>
+                        <height>480</height>
+                        <format>R8G8B8</format>
+                    </image>
+                    <clip>
+                        <near>0.03</near>
+                        <far>100</far>
+                    </clip>
+                    <noise>
+                        <type>gaussian</type>
+                        <!-- Noise is sampled independently per pixel on each frame.
+                              That pixel's noise value is added to each of its color
+                              channels, which at that point lie in the range [0,1]. -->
+                        <mean>0.0</mean>
+                        <stddev>0.007</stddev>
+                    </noise>
+                </camera>
+                <plugin name="camera_driver" filename="libgazebo_ros_camera.so">
+                    <!-- ros -->
+                        <!-- <namespace>test_cam</namespace> not used -->
+                        <!-- <remapping>image_raw:=image_demo</remapping> not used  -->
+                        <!-- <remapping>camera_info:=camera_info_demo</remapping> not used  -->
+                    <!-- /ros -->
+                    <!-- camera_name>omit so it defaults to sensor name</camera_name not used -->
+                    <!-- frame_name>omit so it defaults to link name</frameName not used -->
+                    <!-- <hack_baseline>0.07</hack_baseline>  not used -->
+                </plugin>
+            </sensor>
+        </link>
+
+        <joint name="camera_joint3" type="fixed">
+            <parent>chassis</parent>
+            <child>camera_link3</child>
+            <pose>0.0 0 0.0 0 0 0</pose>
+            <axis>
+                <xyz>0 0 1</xyz>
+            </axis>
+        </joint>
+
+        <joint name="camera_rgb_joint3" type="fixed">
+            <parent>camera_link3</parent>
+            <child>camera_rgb_optical_frame3</child>
+            <pose>0 0 0 0 0 0</pose>  <!-- 0.003 0.011 0.009 0 0 0 -->
+            <axis>
+                <xyz>0 0 1</xyz>
+            </axis>
+        </joint>
+
       
       
             <link name="camera_link4">
@@ -1446,7 +1522,7 @@ from now on, under lines are for other prius_hybird car!!
                 <mass>0.035</mass>
             </inertial>
 
-            <pose>2 -0.7 0.8 0 0.5 -1.57</pose>
+            <pose>2 -0.7 0.8 0 0.43 -1.57</pose>
             <!--sensor name = "" should change when you use camera more then one-->
             <sensor name="camera4" type="camera">
                 <always_on>true</always_on>
@@ -1460,7 +1536,7 @@ from now on, under lines are for other prius_hybird car!!
                         <format>R8G8B8</format>
                     </image>
                     <clip>
-                        <near>0.03</near>
+                        <near>0.03</near>                         
                         <far>100</far>
                     </clip>
                     <noise>
@@ -1551,132 +1627,107 @@ from now on, under lines are for other prius_hybird car!!
         <robot_base_frame>chassis</robot_base_frame>
 
       </plugin>
-      
+    
+ <link name="hokuyo_link">
+            <pose>2.1 0 0.8 0 0 0</pose>
+            <inertial>
+               <inertia>
+                  <ixx>1e-6</ixx>
+                  <ixy>0</ixy>
+                  <ixz>0</ixz>
+                  <iyy>1e-6</iyy>
+            <iyz>0</iyz>
+            <izz>1e-6</izz>
+         </inertia>
+         <mass>1e-5</mass>
+      </inertial>
+      <collision name ="collision">
+         <pose>0 0 0.5 0 0 0</pose>
+         <geometry>
+            <box>
+               <size>0.1 0.1 0.1</size>
+            </box>
+         </geometry>
+      </collision>
+      <visual name="visual">
+         <geometry>
+            <mesh>
+               <uri>model://hokuyo/meshes/hokuyo.dae</uri>
+            </mesh>
+         </geometry>
+      </visual>
+      <sensor name="laser" type="ray">
+         <pose>0.01 0 0.0175 0 -0 0</pose>
+          <ray>
+                 <scan>
+                     <horizontal>
+                           <samples>320</samples>
+                          <resolution>5</resolution>
+                          <min_angle>-0.50</min_angle>
+                          <max_angle>0.50</max_angle>
+                      </horizontal>
+                   </scan>
+                 <range>
+                      <min>0.1</min>
+                      <max>8</max>
+                 </range>
+              </ray>
+         <plugin name="laser" filename="libgazebo_ros_ray_sensor.so">
+            <ros>
+               <remapping>~/out:=scan</remapping>
+            </ros>
+            
+            <frame_name>laser_Frame</frame_name>
+            <output_type>sensor_msgs/LaserScan</output_type>
+         </plugin>
+         <always_on>1</always_on>
+         <update_rate>5</update_rate>
+         <visualize>1</visualize>
+      </sensor>
+   </link>
+   <joint name="hokuyo_joint" type="revolute">
+      <parent>chassis</parent>
+      <child>hokuyo_link</child>
+      <axis>
+         <xyz>0 1 0</xyz>
+         <limit>
+            <upper>0</upper>
+            <lower>0</lower>
+         </limit>
+      </axis>
+   </joint>
     </model>
  
- 
-    <actor name="animated_box">
-        <link name="link">
-          <visual name="visual">
+<model name="my_box">
+    <static>false</static>
+    <pose>-22.34 35 0.6 0 0 0</pose>
+
+    <link name="link">
+        <collision name="collision">
             <geometry>
-              <box>
-                <size>2 2 2</size>
-              </box>
+                <box>
+                    <size>2 2 2</size>
+                </box>
             </geometry>
-          </visual>
-        </link>
-    <script>
-          <loop>true</loop>
-          <delay_start>0.000000</delay_start>
-          <auto_start>true</auto_start>
-           <trajectory id="0" type="square">
-             <waypoint>
-                <time>0.0</time>
-                <pose>-24 40 0.02 0 0 0</pose>
-             </waypoint>
-             
-             <waypoint>
-                <time>1.0</time>
-                <pose>-25 40 0.02 0 0 0</pose>
-             </waypoint>
-             
-             <waypoint>
-                <time>2.0</time>
-                <pose>-26 40 0.02 0 0 0</pose>
-             </waypoint>
-             
-             <waypoint>
-                <time>3.0</time>
-                <pose>-27 40 0.02 0 0 0</pose>
-             </waypoint>
-             
-             <waypoint>
-                <time>4.0</time>
-                <pose>-28 40 0.02 0 0 0</pose>
-             </waypoint>
-             
-             <waypoint>
-                <time>5.0</time>
-                <pose>-29 40 0.02 0 0 0</pose>
-             </waypoint>
-             
-             <waypoint>
-                <time>6.0</time>
-                <pose>-30 40 0.02 0 0 0</pose>
-             </waypoint>
-             
-             <waypoint>
-                <time>7.0</time>
-                <pose>-31 40 0.02 0 0 0</pose>
-             </waypoint>
-             
-             <waypoint>
-                <time>8.0</time>
-                <pose>-32 40 0.02 0 0 0</pose>
-             </waypoint>
-             
-             <waypoint>
-                <time>9.0</time>
-                <pose>-33 40 0.02 0 0 0</pose>
-             </waypoint>
-             
-             <waypoint>
-                <time>10.0</time>
-                <pose>-34 40 0.02 0 0 0</pose>
-             </waypoint>
-             
-             <waypoint>
-                <time>11.0</time>
-                <pose>-33 40 0.02 0 0 0</pose>
-             </waypoint>
-             
-             <waypoint>
-                <time>12.0</time>
-                <pose>-32 40 0.02 0 0 0</pose>
-             </waypoint>
-             
-             <waypoint>
-                <time>13.0</time>
-                <pose>-31 40 0.02 0 0 0</pose>
-             </waypoint>
-             
-             <waypoint>
-                <time>14.0</time>
-                <pose>-30 40 0.02 0 0 0</pose>
-             </waypoint>
-             
-             <waypoint>
-                <time>15.0</time>
-                <pose>-29 40 0.02 0 0 0</pose>
-             </waypoint>
-             
-                          <waypoint>
-                <time>16.0</time>
-                <pose>-28 40 0.02 0 0 0</pose>
-             </waypoint>
-             
-                          <waypoint>
-                <time>17.0</time>
-                <pose>-27 40 0.02 0 0 0</pose>
-             </waypoint>
-             
-                          <waypoint>
-                <time>18.0</time>
-                <pose>-26 40 0.02 0 0 0</pose>
-             </waypoint>
-             
-                          <waypoint>
-                <time>19.0</time>
-                <pose>-25 40 0.02 0 0 0</pose>
-             </waypoint> 
-             
-             <waypoint> 
-                <time>20.0</time>
-                <pose>-24 40 0.02 0 0 0</pose>
-             </waypoint>                         
-          </trajectory>
-        </script>
-      </actor>
+        </collision>
+        <visual name="visual">
+            <geometry>
+                <box>
+                    <size>2 2 2</size>
+                </box>
+            </geometry>
+        </visual>
+    </link>
+  
+
+        <plugin name='object_controller' filename='libgazebo_ros_planar_move.so'>
+    <ros>
+       <namespace>box_move</namespace>
+        <!--<remapping>~/out:=box_move</remapping>-->
+    </ros>
+      </plugin>
+</model> 
+   
 
   <actor name="actor">
       <skin>
@@ -2336,7 +2387,7 @@ from now on, under lines are for other prius_hybird car!!
     </model>
     
     <model name="road2"> <!-- -28.5 -17.5 -4.08 0.0 0.0 1.56 -->
-      <pose>-28.5 -17.5 1.2 0.0 0.0 1.57</pose>
+      <pose>-28.4 -17.4 1.1 0.0 0.0 1.57</pose>
       <static>1</static>
       <link name="road2">
         <collision name="road2_coll">
@@ -2399,32 +2450,7 @@ from now on, under lines are for other prius_hybird car!!
       </link>
     </model>
 
-	<model name="my_box">
-		<pose>0 0 .5 0 0 0</pose>
-		<link name="link">
-			<collision name="collision">
-				<geometry>
-					<box>
-						<size>2 2 2</size>
-					</box>
-				</geometry>
-			</collision>
-			<visual name="visual">
-				<geometry>
-					<box>
-						<size>2 2 2</size>
-					</box>
-				</geometry>
-				<material>
-					<script>
-						<uri>file://media/materials/scripts/gazebo.material</uri>
-						<name>Gazebo/WoodPallet</name>
-					</script>
-				</material>
-			</visual>
-		</link>
-
-	</model>
+	
 
   </world>
 </sdf>

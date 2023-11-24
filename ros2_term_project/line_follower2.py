@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
+from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
 from .line_tracker import LineTracker
 import cv_bridge
@@ -8,57 +9,56 @@ import time
 import cv2
 import numpy as np
 import threading
+import datetime as dt
+from enum import Enum
+from .stop_line_tracker import StopLineTracker
 
-class LineFollower1(Node):
-    def __init__(self, line_tracker: LineTracker):
-        super().__init__('line_follower1')
+class LineFollower2(Node):
+    def __init__(self, line_tracker: LineTracker, stop_line_tracker):
+        super().__init__('line_follower2')
         self.line_tracker = line_tracker
+        self.stop_line_tracker = stop_line_tracker
         self.bridge = cv_bridge.CvBridge()
         self._subscription = self.create_subscription(Image, '/camera4/image_raw', self.image_callback, 10)
-        self._subscription2 = self.create_subscription(Image, '/camera1/image_raw',self.stop_line_callback, 10)
+        self._subscription2 = self.create_subscription(Image, '/camera3/image_raw',self.stop_line_callback, 10)
+        self._subscription3 = self.create_subscription(LaserScan, '/scan', self.scan_callback, 10)          
         self._publisher = self.create_publisher(Twist, 'cmd_vel', 1)
         self.twist = Twist()
-        self.twist.linear.x = 3.1
+        self.twist.linear.x = 3.0
         self.img = None
         #self.stopped = False
         self.count = 0
         self.start_time = time.time()  # 시작 시간 저장
         self.timer = None  # 타이머 변수 추가
-        self.set_timer(39, self.first_decrease_speed)
+        self.set_timer(32, self.first_decrease_speed)
         self.sensorFlag = False
+        self.obstacle_found = False
+        self.waiting_start_time = None
+        self.avoidance_move = False
+        self.avoidance_start_time = None
+        self.avoidance_sign = 1
+        self.avoidance_start_delta = 0
                 
+    def scan_callback(self, msg: LaserScan):
+        min_distance = min(msg.ranges)
+        if not self.obstacle_found and min_distance < 7.0:
+            self.stop()
+            self.obstacle_found = True
+        if self.obstacle_found and min_distance > 7.0 :
+            self.go()
+            self.obstacle_found = False    
+    def go(self):
+        self.get_logger().info('obstacle has been removed...')
+        self.twist.linear.x = 3.4
+        
+    def moving_callback(self, msg: LaserScan):
+        self.twist.linear.x = 3.0
+        self._publisher.publish(self.twist)   
+                                                                
     def stop_line_callback(self, msg: Image):
-        if time.time() - self.start_time < 10:  # 타임 시간 동안은 기능을 사용하지 않음
-            return   
-                 
         img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-        lower_white = np.array([0, 0, 200])
-        upper_white = np.array([180, 30, 255])
-        stop_line_mask = cv2.inRange(hsv, lower_white, upper_white)
-        
-        h, w, d = img.shape
-        search_top = int( h / 2 - 50)
-        search_bot = int(h)
-        stop_line_mask[0:search_top, 0:w] = 0
-        stop_line_mask[search_bot:h, 0:w] = 0
-        
-        M = cv2.moments(stop_line_mask)
-        if M['m00'] > 0:
-            cx = int(M['m10'] / M['m00'])
-            cy = int(M['m01'] / M['m00'])
-            cv2.circle(img, (cx, cy), 20, (0, 0, 255), -1)
-            err = cy - h / 2
-
-            self._delta = err
-            # END CONTROL
-        cv2.imshow("window", img)
-        cv2.imshow("stop_line_mask", stop_line_mask)
-        cv2.waitKey(3)  
-        
-                     
-        if np.any(stop_line_mask >= 250):
-        
+        self.stop_line_tracker.stop_line_callback(img)                                   
+        if self.stop_line_tracker.stop_line_mask is not None and np.any(self.stop_line_tracker.stop_line_mask == 255):
 
             if self.sensorFlag == False:
                 self.count += 1
@@ -70,7 +70,7 @@ class LineFollower1(Node):
             if self.count == 1:
                 self.stop()
                 time.sleep(3)
-                self.twist.linear.x = 2.7
+                self.twist.linear.x = 2.5
                 self.get_logger().info('linear.x = %f' % self.twist.linear.x) 
                 self.get_logger().info('count = %f' % self.count)                           
                 self._publisher.publish(self.twist)
@@ -79,41 +79,42 @@ class LineFollower1(Node):
                                
             if self.count == 2:
                 self.stop()  
-                time.sleep(4)  
+                time.sleep(3)  
                 self.twist.linear.x = 3.2
-                self.get_logger().info('linear.x = %f' % self.twist.linear.x)
-                self.get_logger().info('count = %f' % self.count)
+                self.get_logger().info('linear.x = %f' % self.twist.linear.x) 
+                self.get_logger().info('count = %f' % self.count)                           
                 self._publisher.publish(self.twist) 
-                self.set_timer(14, self.second_decrease_speed)  
+                self.set_timer(16, self.second_decrease_speed)  
                    
                                                         
             if self.count == 3:
                 self.get_logger().info('count = %f' % self.count)            
-                self.stop() 
+                self.stop()
+                time.sleep(100)
 
         else:
             self.sensorFlag = False
 
+  
     def image_callback(self, msg: Image):
         img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-        self.line_tracker.process(img)
-        self.twist.angular.z = (1) * self.line_tracker._delta / 200
-        self.get_logger().info('angular.z = %f' % self.twist.angular.z)
+        self.line_tracker.process_second(img)
+        self.twist.angular.z = (1) * self.line_tracker._delta / 250
         self._publisher.publish(self.twist)
 
         
     def increase_speed(self):
-        self.twist.linear.x = 3.55
+        self.twist.linear.x = 3.4
         self.get_logger().info('linear.x = %f' % self.twist.linear.x) 
         self._publisher.publish(self.twist)
         
     def first_decrease_speed(self):
-        self.twist.linear.x = 2.75
+        self.twist.linear.x = 2.2
         self.get_logger().info('linear.x = %f' % self.twist.linear.x) 
         self._publisher.publish(self.twist)
                   
     def second_decrease_speed(self):
-        self.twist.linear.x = 2.6
+        self.twist.linear.x = 2.4
         self.get_logger().info('linear.x = %f' % self.twist.linear.x) 
         self._publisher.publish(self.twist)
         
@@ -139,12 +140,13 @@ class LineFollower1(Node):
 def main():
     rclpy.init()
     tracker = LineTracker()
-    follower1 = LineFollower(tracker)
+    stop = StopLineTracker()
+    follower2 = LineFollower2(tracker,stop)
     try:
-        rclpy.spin(follower1)
+        rclpy.spin(follower2)
     except KeyboardInterrupt:
-        follower1.stop()
-        follower1.stop()
+        follower2.stop()
+        follower2.stop()
     rclpy.shutdown()
 
 
