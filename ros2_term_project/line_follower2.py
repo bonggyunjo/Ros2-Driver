@@ -12,19 +12,21 @@ import threading
 import datetime as dt
 from enum import Enum
 from .stop_line_tracker import StopLineTracker
+from .obstacle import Obstacle
 
 class LineFollower2(Node):
-    def __init__(self, line_tracker: LineTracker, stop_line_tracker):
+    def __init__(self, line_tracker: LineTracker, stop_line_tracker:StopLineTracker, obstacle:Obstacle):
         super().__init__('line_follower2')
         self.line_tracker = line_tracker
         self.stop_line_tracker = stop_line_tracker
+        self.obstacle = obstacle
         self.bridge = cv_bridge.CvBridge()
         self._subscription = self.create_subscription(Image, '/camera4/image_raw', self.image_callback, 10)
         self._subscription2 = self.create_subscription(Image, '/camera3/image_raw',self.stop_line_callback, 10)
-        self._subscription3 = self.create_subscription(LaserScan, '/scan', self.scan_callback, 10)          
+        self._subscription3 = self.create_subscription(LaserScan, '/scan1', self.scan_callback, 10)          
         self._publisher = self.create_publisher(Twist, 'cmd_vel', 1)
         self.twist = Twist()
-        self.twist.linear.x = 3.0
+        self.twist.linear.x = 3.3
         self.img = None
         #self.stopped = False
         self.count = 0
@@ -32,21 +34,15 @@ class LineFollower2(Node):
         self.timer = None  # 타이머 변수 추가
         self.set_timer(32, self.first_decrease_speed)
         self.sensorFlag = False
-        self.obstacle_found = False
-        self.waiting_start_time = None
-        self.avoidance_move = False
-        self.avoidance_start_time = None
-        self.avoidance_sign = 1
-        self.avoidance_start_delta = 0
                 
     def scan_callback(self, msg: LaserScan):
         min_distance = min(msg.ranges)
-        if not self.obstacle_found and min_distance < 7.0:
+        if not self.obstacle.obstacle_found and min_distance < 7.0:
             self.stop()
-            self.obstacle_found = True
-        if self.obstacle_found and min_distance > 7.0 :
+            self.obstacle.obstacle_found = True
+        if self.obstacle.obstacle_found and min_distance > 7.0 :
             self.go()
-            self.obstacle_found = False    
+            self.obstacle.obstacle_found = False    
     def go(self):
         self.get_logger().info('obstacle has been removed...')
         self.twist.linear.x = 3.4
@@ -71,7 +67,7 @@ class LineFollower2(Node):
                 self.stop()
                 time.sleep(3)
                 self.twist.linear.x = 2.5
-                self.get_logger().info('linear.x = %f' % self.twist.linear.x) 
+                self.get_logger().info('change linear.x = %f' % self.twist.linear.x) 
                 self.get_logger().info('count = %f' % self.count)                           
                 self._publisher.publish(self.twist)
                 self.set_timer(25, self.increase_speed)  # 20초 후에 increase_speed 호출
@@ -81,7 +77,7 @@ class LineFollower2(Node):
                 self.stop()  
                 time.sleep(3)  
                 self.twist.linear.x = 3.2
-                self.get_logger().info('linear.x = %f' % self.twist.linear.x) 
+                self.get_logger().info('change linear.x = %f' % self.twist.linear.x) 
                 self.get_logger().info('count = %f' % self.count)                           
                 self._publisher.publish(self.twist) 
                 self.set_timer(16, self.second_decrease_speed)  
@@ -105,17 +101,17 @@ class LineFollower2(Node):
         
     def increase_speed(self):
         self.twist.linear.x = 3.4
-        self.get_logger().info('linear.x = %f' % self.twist.linear.x) 
+        self.get_logger().info('change linear.x = %f' % self.twist.linear.x) 
         self._publisher.publish(self.twist)
         
     def first_decrease_speed(self):
         self.twist.linear.x = 2.2
-        self.get_logger().info('linear.x = %f' % self.twist.linear.x) 
+        self.get_logger().info('change linear.x = %f' % self.twist.linear.x) 
         self._publisher.publish(self.twist)
                   
     def second_decrease_speed(self):
-        self.twist.linear.x = 2.4
-        self.get_logger().info('linear.x = %f' % self.twist.linear.x) 
+        self.twist.linear.x = 2.1
+        self.get_logger().info('change linear.x = %f' % self.twist.linear.x) 
         self._publisher.publish(self.twist)
         
   
@@ -141,7 +137,8 @@ def main():
     rclpy.init()
     tracker = LineTracker()
     stop = StopLineTracker()
-    follower2 = LineFollower2(tracker,stop)
+    obstacle = Obstacle()
+    follower2 = LineFollower2(tracker,stop,obstacle)
     try:
         rclpy.spin(follower2)
     except KeyboardInterrupt:
